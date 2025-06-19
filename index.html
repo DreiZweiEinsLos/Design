@@ -10,12 +10,18 @@
       font-family: Helvetica, Arial, sans-serif;
       font-size: 22px;
       padding: 50px;
+
+      max-width: 100%;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
     .block {
-      white-space: pre-wrap;
+      white-space: normal;
       margin-bottom: 1.5em;
       transition: color 1s;
       line-height: 1.44em;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
     .verblasst {
       color: #666;
@@ -39,6 +45,7 @@
     .treppen-zeile {
       position: absolute;
       white-space: nowrap;
+      left: calc(1em * var(--index)); /* dynamisch, z.B. per JS setzen */
     }
     .verzoegert-link {
       text-decoration: none;
@@ -50,6 +57,22 @@
       text-decoration: underline;
       color: white;
       cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      body {
+       font-size: 20px; /* evtl. leicht kleiner für mobile, aber nicht zu klein */
+       padding: 20px;
+      }
+     .treppen-zeile {
+       left: 0 !important;
+       bottom: unset;
+       position: static;
+       display: block;
+       margin-bottom: 0.5em;
+      }
+     .treppe-container {
+       height: auto;
+      }
     }
 
   </style>
@@ -132,7 +155,7 @@
       const zeile = document.createElement("div");
       zeile.classList.add("treppen-zeile");
       zeile.style.bottom = `${index * 1.44}em`;
-      zeile.style.left = `${index * 2}em`;
+      zeile.style.setProperty('--index', index);
       containerDiv.appendChild(zeile);
 
       let i = 0;
