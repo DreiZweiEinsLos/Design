@@ -60,19 +60,22 @@
     }
     @media (max-width: 600px) {
       body {
-       font-size: 20px; /* evtl. leicht kleiner für mobile, aber nicht zu klein */
-       padding: 20px;
+        font-size: 20px;
+        padding: 20px;
       }
-     .treppen-zeile {
-       left: 0 !important;
-       bottom: unset;
-       position: static;
-       display: block;
-       margin-bottom: 0.5em;
+
+      .treppen-zeile {
+        position: static;
+        display: block;
+        margin-bottom: 0.75em;
+        white-space: normal;
       }
+
      .treppe-container {
        height: auto;
-      }
+       margin-top: 1em;
+       margin-bottom: 1.5em;
+     }
     }
 
   </style>
@@ -85,7 +88,7 @@
       `HALLO.\nICH BIN EVA.\nINDUSTRIE & SERVICE DESIGNERIN.\n15+ JAHRE <span class="verzoegert-link" data-url="https://www.linkedin.com/in/evaburkhardt/">ERFAHRUNG</span>.\n`,
       `TREPPE:\nDU WILLST DEINE KUNDEN KLAR ANSPRECHEN?\n DEIN PRODUKT GEZIELT WEITERENTWICKELN?\n WICHTIGE SERVICE-TOUCHPOINTS OPTIMIEREN?\n DAS KUNDENERLEBNIS IN DEN MITTELPUNKT STELLEN?`,
       `WO STEHT DEIN TEAM?\n... WIR MACHEN RESEARCH.\n... WIR HABEN EINE IDEE.\n... WIR ARBEITEN AM DESIGN.`,
-      `WAS BRAUCHST DU?\n> FREELANCE DESIGN ARBEIT\n> WORKSHOPS\n> COACHING`,
+      `WAS BRAUCHST DU?\n. FREELANCE DESIGN ARBEIT\n. WORKSHOPS\n. COACHING`,
       `<span class="verzoegert-link" data-url="mailto:evaburkhardt.mail@gmail.com">SCHREIB MIR</span> JETZT.`
     ];
 
@@ -155,7 +158,9 @@
       const zeile = document.createElement("div");
       zeile.classList.add("treppen-zeile");
       zeile.style.bottom = `${index * 1.44}em`;
-      zeile.style.setProperty('--index', index);
+      if (window.innerWidth > 600) {
+        zeile.style.setProperty('--index', index);
+      }
       containerDiv.appendChild(zeile);
 
       let i = 0;
