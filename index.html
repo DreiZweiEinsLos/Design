@@ -10,74 +10,70 @@
       font-family: Helvetica, Arial, sans-serif;
       font-size: 22px;
       padding: 50px;
-
       max-width: 100%;
       word-break: break-word;
       overflow-wrap: break-word;
     }
+
     .block {
       white-space: normal;
       margin-bottom: 1.5em;
       transition: color 1s;
       line-height: 1.44em;
-      word-break: break-word;
-      overflow-wrap: break-word;
     }
+
     .verblasst {
       color: #666;
     }
-    .cursor::after {
-      content: "|";
-      animation: blink 1s steps(1) infinite;
-      margin-left: 5px;
-    }
-    @keyframes blink {
-      50% {
-        opacity: 0;
-      }
-    }
+
     .treppe-container {
       position: relative;
-      height: 7.2em;
-      margin-top: 1em;
-      margin-bottom: 2em;
+      margin-top: 1.44em;
+      margin-bottom: 1.44em;
     }
+
     .treppen-zeile {
       position: absolute;
-      white-space: nowrap;
-      left: calc(1em * var(--index)); /* dynamisch, z.B. per JS setzen */
+      white-space: pre;
+      left: calc(3.5em * var(--index));
+      bottom: calc(1.44em * var(--index));
+      line-height: 1.44em;
     }
+
     .verzoegert-link {
       text-decoration: none;
       color: inherit;
       cursor: default;
       transition: all 0.3s;
     }
+
     .verzoegert-link.aktiv {
       text-decoration: underline;
       color: white;
       cursor: pointer;
     }
+
     @media (max-width: 600px) {
       body {
-        font-size: 20px;
-        padding: 20px;
+        font-size: 19px;
+        padding: 24px;
+      }
+
+      .treppe-container {
+        position: static !important;
+        height: auto !important;
       }
 
       .treppen-zeile {
-        position: static;
+        position: static !important;
+        left: auto !important;
+        bottom: auto !important;
         display: block;
-        margin-bottom: 0.75em;
         white-space: normal;
+        margin-left: 0;
+        margin-bottom: 0.5em;
       }
-
-     .treppe-container {
-       height: auto;
-       margin-top: 1em;
-       margin-bottom: 1.5em;
-     }
     }
-
   </style>
 </head>
 <body>
@@ -85,39 +81,35 @@
 
   <script>
     const textBloecke = [
-      `HALLO.\nICH BIN EVA.\nINDUSTRIE & SERVICE DESIGNERIN.\n15+ JAHRE <span class="verzoegert-link" data-url="https://www.linkedin.com/in/evaburkhardt/">ERFAHRUNG</span>.\n`,
-      `TREPPE:\nDU WILLST DEINE KUNDEN KLAR ANSPRECHEN?\n DEIN PRODUKT GEZIELT WEITERENTWICKELN?\n WICHTIGE SERVICE-TOUCHPOINTS OPTIMIEREN?\n DAS KUNDENERLEBNIS IN DEN MITTELPUNKT STELLEN?`,
-      `WO STEHT DEIN TEAM?\n... WIR MACHEN RESEARCH.\n... WIR HABEN EINE IDEE.\n... WIR ARBEITEN AM DESIGN.`,
-      `WAS BRAUCHST DU?\n. FREELANCE DESIGN ARBEIT\n. WORKSHOPS\n. COACHING`,
-      `<span class="verzoegert-link" data-url="mailto:evaburkhardt.mail@gmail.com">SCHREIB MIR</span> JETZT.`
+      `HALLO.\nICH BIN EVA.\nINDUSTRIE & SERVICE DESIGNERIN.\n15+ JAHRE <span class="verzoegert-link" data-url="https://www.linkedin.com/in/evaburkhardt/">ERFAHRUNG</span>.`,
+      `TREPPE:\nDU WILLST DEINE KUNDEN BEWUSST ANSPRECHEN?\nDEIN PRODUKT &/ TOUCHPOINTS NEU DENKEN?\nDAS ERLEBNIS VERSTEHEN UND DESIGNEN?`,
+      `WAS BRAUCHST DU?\n   FREELANCE DESIGN ARBEIT\n   WORKSHOPS\n   COACHING`,
+      `<span class="verzoegert-link" data-url="mailto:evaburkhardt.mail@gmail.com">SCHREIB MIR.</span>`
     ];
 
     const schreibDelay = 35;
     const zeilenPause = 2000;
     const blockPause = 1500;
+    const pauseNachErsterZeile = 800;
 
     const container = document.getElementById("text-container");
 
     function schreibeBlock(text, callback) {
       const div = document.createElement("div");
-      div.classList.add("block", "cursor");
+      div.classList.add("block");
       container.appendChild(div);
 
       let pos = 0;
       let tempHTML = "";
+      let zeilenZaehler = 0;
 
       function tippen() {
         if (pos >= text.length) {
-          div.classList.remove("cursor");
-          // Nach 1 Sekunde Link aktivieren
-          setTimeout(() => {
-            const linkSpan = div.querySelector(".verzoegert-link");
-            if (linkSpan) {
-              linkSpan.classList.add("aktiv");
-              linkSpan.onclick = () => window.open(linkSpan.dataset.url, "_blank");
-            }
-          }, 1000);
-
+          const linkSpan = div.querySelector(".verzoegert-link");
+          if (linkSpan) {
+            linkSpan.classList.add("aktiv");
+            linkSpan.onclick = () => window.open(linkSpan.dataset.url, "_blank");
+          }
           if (callback) callback();
           return;
         }
@@ -125,7 +117,6 @@
         const char = text[pos];
 
         if (char === "<") {
-          // Ganzes Tag am Stück einfügen
           const endTagPos = text.indexOf(">", pos);
           if (endTagPos === -1) {
             tempHTML += text.slice(pos);
@@ -141,7 +132,13 @@
         } else if (char === "\n") {
           tempHTML += "<br>";
           pos++;
+          zeilenZaehler++;
           div.innerHTML = tempHTML;
+
+          if (zeilenZaehler === 1) {
+            setTimeout(tippen, pauseNachErsterZeile);
+            return;
+          }
         } else {
           tempHTML += char;
           pos++;
@@ -157,10 +154,7 @@
     function tippeTreppeZeile(zeileText, containerDiv, index, callback) {
       const zeile = document.createElement("div");
       zeile.classList.add("treppen-zeile");
-      zeile.style.bottom = `${index * 1.44}em`;
-      if (window.innerWidth > 600) {
-        zeile.style.setProperty('--index', index);
-      }
+      zeile.style.setProperty('--index', index);
       containerDiv.appendChild(zeile);
 
       let i = 0;
@@ -180,6 +174,7 @@
       const zeilen = textBlock.split("\n");
       const containerDiv = document.createElement("div");
       containerDiv.classList.add("block", "treppe-container");
+      containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
       container.appendChild(containerDiv);
 
       let i = 0;
@@ -201,10 +196,9 @@
         const vorheriger = container.children[index - 1];
         vorheriger.classList.add("verblasst");
 
-       // Abstand zum nächsten Block verringern
-       if (textBloecke[index].startsWith("TREPPE:\n")) {
-       vorheriger.style.marginBottom = "0.5em";
-       }
+        if (textBloecke[index].startsWith("TREPPE:\n")) {
+          vorheriger.style.marginBottom = "1.44em";
+        }
       }
 
       if (index < textBloecke.length) {
