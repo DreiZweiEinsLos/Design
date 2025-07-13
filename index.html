@@ -2,59 +2,222 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Eva – Industrie & Service Design</title>
+  <title>Text mit getippter Treppe</title>
   <style>
     body {
-      margin: 0;
-      padding: 2rem;
       background-color: #111;
-      color: #888;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 1.2rem;
-      line-height: 1.6;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: 0 auto;
-    }
-
-    .highlight {
       color: #fff;
-      text-decoration: underline;
+      font-family: Helvetica, Arial, sans-serif;
+      font-size: 22px;
+      padding: 50px;
+      max-width: 100%;
+      word-break: break-word;
+      overflow-wrap: break-word;
     }
 
-    a {
-      color: #fff;
+    .block {
+      white-space: normal;
+      margin-bottom: 1.5em;
+      transition: color 1s;
+      line-height: 1.44em;
+    }
+
+    .verblasst {
+      color: #666;
+    }
+
+    .treppe-container {
+      position: relative;
+      margin-top: 1.44em;
+      margin-bottom: 1.44em;
+    }
+
+    .treppen-zeile {
+      position: absolute;
+      white-space: pre;
+      left: calc(3.5em * var(--index));
+      bottom: calc(1.44em * var(--index));
+      line-height: 1.44em;
+    }
+
+    .verzoegert-link {
+      text-decoration: none;
+      color: inherit;
+      cursor: default;
+      transition: all 0.3s;
+    }
+
+    .verzoegert-link.aktiv {
       text-decoration: underline;
+      color: white;
+      cursor: pointer;
     }
 
     @media (max-width: 600px) {
       body {
-        font-size: 1rem;
-        padding: 1.5rem;
+        font-size: 19px;
+        padding: 24px;
+      }
+
+      .treppe-container {
+        position: static !important;
+        height: auto !important;
+      }
+
+      .treppen-zeile {
+        position: static !important;
+        left: auto !important;
+        bottom: auto !important;
+        display: block;
+        white-space: normal;
+        margin-left: 0;
+        margin-bottom: 0.5em;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <p>HALLO.<br>
-    ICH BIN EVA.<br>
-    INDUSTRIE & SERVICE DESIGNERIN.<br>
-    15+ JAHRE <span class="highlight">ERFAHRUNG.</span></p>
+  <div id="text-container"></div>
 
-    <p>DU WILLST DEINE KUNDEN BEWUSST ANSPRECHEN?<br>
-    DEIN PRODUKT &/ TOUCHPOINTS NEU DENKEN?<br>
-    WAS BRAUCHST DU?<br>
-    DAS ERLEBNIS VERSTEHEN UND DESIGNEN?</p>
+  <script>
+    const textBloecke = [
+      `HALLO.\nICH BIN EVA.\nINDUSTRIE & SERVICE DESIGNERIN.\n15+ JAHRE <span class="verzoegert-link" data-url="https://www.linkedin.com/in/evaburkhardt/">ERFAHRUNG</span>.`,
+      `TREPPE:\nDU WILLST DEINE KUNDEN BEWUSST ANSPRECHEN?\nDEIN PRODUKT &/ TOUCHPOINTS NEU DENKEN?\nDAS ERLEBNIS VERSTEHEN UND DESIGNEN?`,
+      `WAS BRAUCHST DU?\n   FREELANCE DESIGN ARBEIT\n   WORKSHOPS\n   COACHING`,
+      `<span class="verzoegert-link" data-url="mailto:evaburkhardt.mail@gmail.com">SCHREIB MIR.</span>`
+    ];
 
-    <p>FREELANCE DESIGN ARBEIT<br>
-    WORKSHOPS<br>
-    COACHING</p>
+    const schreibDelay = 35;
+    const zeilenPause = 2000;
+    const blockPause = 1500;
+    const pauseNachErsterZeile = 800;
 
-    <p><a href="mailto:eva@example.com">SCHREIB MIR.</a></p>
-  </div>
+    const container = document.getElementById("text-container");
+
+    function schreibeBlock(text, callback) {
+      const div = document.createElement("div");
+      div.classList.add("block");
+      container.appendChild(div);
+
+      let pos = 0;
+      let tempHTML = "";
+      let zeilenZaehler = 0;
+
+      function tippen() {
+        if (pos >= text.length) {
+          const linkSpan = div.querySelector(".verzoegert-link");
+          if (linkSpan) {
+            linkSpan.classList.add("aktiv");
+            linkSpan.onclick = () => window.open(linkSpan.dataset.url, "_blank");
+          }
+          if (callback) callback();
+          return;
+        }
+
+        const char = text[pos];
+
+        if (char === "<") {
+          const endTagPos = text.indexOf(">", pos);
+          if (endTagPos === -1) {
+            tempHTML += text.slice(pos);
+            pos = text.length;
+            div.innerHTML = tempHTML;
+            tippen();
+            return;
+          }
+          const tagContent = text.slice(pos, endTagPos + 1);
+          tempHTML += tagContent;
+          pos = endTagPos + 1;
+          div.innerHTML = tempHTML;
+        } else if (char === "\n") {
+          tempHTML += "<br>";
+          pos++;
+          zeilenZaehler++;
+          div.innerHTML = tempHTML;
+
+          if (zeilenZaehler === 1) {
+            setTimeout(tippen, pauseNachErsterZeile);
+            return;
+          }
+        } else {
+          tempHTML += char;
+          pos++;
+          div.innerHTML = tempHTML;
+        }
+
+        setTimeout(tippen, schreibDelay);
+      }
+
+      tippen();
+    }
+
+    function tippeTreppeZeile(zeileText, containerDiv, index, callback) {
+      const zeile = document.createElement("div");
+      zeile.classList.add("treppen-zeile");
+      zeile.style.setProperty('--index', index);
+      containerDiv.appendChild(zeile);
+
+      let i = 0;
+      function tippen() {
+        if (i < zeileText.length) {
+          zeile.textContent += zeileText[i];
+          i++;
+          setTimeout(tippen, schreibDelay);
+        } else {
+          callback && callback();
+        }
+      }
+      tippen();
+    }
+
+    function zeigeTreppe(textBlock, callback) {
+      const zeilen = textBlock.split("\n");
+      const containerDiv = document.createElement("div");
+      containerDiv.classList.add("block", "treppe-container");
+      containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
+      container.appendChild(containerDiv);
+
+      let i = 0;
+      function baueZeile() {
+        if (i < zeilen.length) {
+          tippeTreppeZeile(zeilen[i], containerDiv, i, () => {
+            setTimeout(baueZeile, zeilenPause);
+          });
+          i++;
+        } else {
+          callback && callback();
+        }
+      }
+      baueZeile();
+    }
+
+    function zeigeBlock(index) {
+      if (index > 0) {
+        const vorheriger = container.children[index - 1];
+        vorheriger.classList.add("verblasst");
+
+        if (textBloecke[index].startsWith("TREPPE:\n")) {
+          vorheriger.style.marginBottom = "1.44em";
+        }
+      }
+
+      if (index < textBloecke.length) {
+        const blockText = textBloecke[index];
+
+        if (blockText.startsWith("TREPPE:\n")) {
+          const treppenText = blockText.replace("TREPPE:\n", "");
+          zeigeTreppe(treppenText, () => {
+            setTimeout(() => zeigeBlock(index + 1), blockPause);
+          });
+        } else {
+          schreibeBlock(blockText, () => {
+            setTimeout(() => zeigeBlock(index + 1), blockPause);
+          });
+        }
+      }
+    }
+
+    window.onload = () => zeigeBlock(0);
+  </script>
 </body>
 </html>
