@@ -53,10 +53,12 @@
       cursor: pointer;
     }
 
+    /* ---------- MOBIL: max 600px ---------- */
     @media (max-width: 600px) {
       body {
-        font-size: 19px;
-        padding: 24px;
+        font-size: 26px;
+        padding: 32px;
+        line-height: 1.6em;
       }
 
       .treppe-container {
@@ -70,8 +72,7 @@
         bottom: auto !important;
         display: block;
         white-space: normal;
-        margin-left: 0;
-        margin-bottom: 0.5em;
+        margin-bottom: 0.7em;
       }
     }
   </style>
@@ -82,7 +83,7 @@
   <script>
     const textBloecke = [
       `HALLO.\nICH BIN EVA.\nINDUSTRIE & SERVICE DESIGNERIN.\n15+ JAHRE <span class="verzoegert-link" data-url="https://www.linkedin.com/in/evaburkhardt/">ERFAHRUNG</span>.`,
-      `TREPPE:\nDU WILLST DEINE KUNDEN BEWUSST ANSPRECHEN?\nDEIN PRODUKT &/ TOUCHPOINTS NEU DENKEN?\nDAS ERLEBNIS VERSTEHEN UND DESIGNEN?`,
+      `TREPPE:\nDU WILLST DEINE KUNDEN BEWUSST ANSPRECHEN?\nDEIN PRODUKT &/ DIE TOUCHPOINTS NEU DENKEN?\nDAS ERLEBNIS VERSTEHEN UND DESIGNEN?`,
       `WAS BRAUCHST DU?\n   FREELANCE DESIGN ARBEIT\n   WORKSHOPS\n   COACHING`,
       `<span class="verzoegert-link" data-url="mailto:evaburkhardt.mail@gmail.com">SCHREIB MIR.</span>`
     ];
@@ -154,7 +155,12 @@
     function tippeTreppeZeile(zeileText, containerDiv, index, callback) {
       const zeile = document.createElement("div");
       zeile.classList.add("treppen-zeile");
-      zeile.style.setProperty('--index', index);
+
+      // Nur Offset für große Bildschirme setzen
+      if (window.innerWidth > 600) {
+        zeile.style.setProperty('--index', index);
+      }
+
       containerDiv.appendChild(zeile);
 
       let i = 0;
@@ -174,7 +180,11 @@
       const zeilen = textBlock.split("\n");
       const containerDiv = document.createElement("div");
       containerDiv.classList.add("block", "treppe-container");
-      containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
+
+      if (window.innerWidth > 600) {
+        containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
+      }
+
       container.appendChild(containerDiv);
 
       let i = 0;
