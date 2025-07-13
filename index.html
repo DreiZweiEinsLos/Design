@@ -2,77 +2,78 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Text mit getippter Treppe</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Eva Burkhardt</title>
   <style>
     body {
       background-color: #111;
-      color: #fff;
-      font-family: Helvetica, Arial, sans-serif;
-      font-size: 22px;
-      padding: 50px;
-      max-width: 100%;
+      color: #ccc;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      font-size: 20px;
+      line-height: 1.5;
+    }
+
+    #text-container {
+      max-width: none;
+      margin: 0;
+      white-space: normal;
       word-break: break-word;
-      overflow-wrap: break-word;
     }
 
     .block {
-      white-space: normal;
-      margin-bottom: 1.5em;
-      transition: color 1s;
-      line-height: 1.44em;
+      margin-bottom: 40px;
+      transition: opacity 1s ease;
     }
 
     .verblasst {
-      color: #666;
+      opacity: 0.4;
+    }
+
+    .verzoegert-link {
+      opacity: 0;
+      pointer-events: none;
+      text-decoration: none;
+      transition: opacity 0.5s ease, text-decoration 0.3s ease;
+      color: #ccc;
+    }
+
+    .verzoegert-link.aktiv {
+      opacity: 1;
+      pointer-events: auto;
+      text-decoration: underline;
+      cursor: pointer;
     }
 
     .treppe-container {
       position: relative;
-      margin-top: 1.44em;
-      margin-bottom: 1.44em;
     }
 
     .treppen-zeile {
       position: absolute;
-      white-space: pre;
-      left: calc(3.5em * var(--index));
-      bottom: calc(1.44em * var(--index));
-      line-height: 1.44em;
+      left: calc(var(--index) * 10px);
+      bottom: calc(var(--index) * 1.2em);
     }
 
-    .verzoegert-link {
-      text-decoration: none;
-      color: inherit;
-      cursor: default;
-      transition: all 0.3s;
-    }
-
-    .verzoegert-link.aktiv {
-      text-decoration: underline;
-      color: white;
-      cursor: pointer;
-    }
-
-    /* ---------- MOBIL: max 600px ---------- */
     @media (max-width: 600px) {
       body {
-        font-size: 26px;
-        padding: 32px;
-        line-height: 1.6em;
+        font-size: 18px;
       }
 
-      .treppe-container {
-        position: static !important;
-        height: auto !important;
+      #text-container {
+        max-width: 600px;
+        margin: 0 auto;
       }
 
       .treppen-zeile {
         position: static !important;
         left: auto !important;
         bottom: auto !important;
-        display: block;
-        white-space: normal;
-        margin-bottom: 0.7em;
+      }
+
+      .treppe-container {
+        height: auto !important;
       }
     }
   </style>
@@ -94,6 +95,7 @@
     const pauseNachErsterZeile = 800;
 
     const container = document.getElementById("text-container");
+    const istMobil = window.innerWidth <= 600;
 
     function schreibeBlock(text, callback) {
       const div = document.createElement("div");
@@ -152,45 +154,42 @@
       tippen();
     }
 
-    function tippeTreppeZeile(zeileText, containerDiv, index, callback) {
-      const zeile = document.createElement("div");
-      zeile.classList.add("treppen-zeile");
-
-      // Nur Offset für große Bildschirme setzen
-      if (window.innerWidth > 600) {
-        zeile.style.setProperty('--index', index);
-      }
-
-      containerDiv.appendChild(zeile);
-
-      let i = 0;
-      function tippen() {
-        if (i < zeileText.length) {
-          zeile.textContent += zeileText[i];
-          i++;
-          setTimeout(tippen, schreibDelay);
-        } else {
-          callback && callback();
-        }
-      }
-      tippen();
-    }
-
     function zeigeTreppe(textBlock, callback) {
       const zeilen = textBlock.split("\n");
-      const containerDiv = document.createElement("div");
-      containerDiv.classList.add("block", "treppe-container");
 
-      if (window.innerWidth > 600) {
-        containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
+      if (istMobil) {
+        schreibeBlock(zeilen.join("\n"), callback);
+        return;
       }
 
+      const containerDiv = document.createElement("div");
+      containerDiv.classList.add("block", "treppe-container");
+      containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
       container.appendChild(containerDiv);
+
+      function tippeZeile(text, index, cb) {
+        const zeile = document.createElement("div");
+        zeile.classList.add("treppen-zeile");
+        zeile.style.setProperty("--index", index);
+        containerDiv.appendChild(zeile);
+
+        let i = 0;
+        function tippen() {
+          if (i < text.length) {
+            zeile.textContent += text[i];
+            i++;
+            setTimeout(tippen, schreibDelay);
+          } else {
+            cb && cb();
+          }
+        }
+        tippen();
+      }
 
       let i = 0;
       function baueZeile() {
         if (i < zeilen.length) {
-          tippeTreppeZeile(zeilen[i], containerDiv, i, () => {
+          tippeZeile(zeilen[i], i, () => {
             setTimeout(baueZeile, zeilenPause);
           });
           i++;
@@ -198,6 +197,7 @@
           callback && callback();
         }
       }
+
       baueZeile();
     }
 
@@ -205,10 +205,6 @@
       if (index > 0) {
         const vorheriger = container.children[index - 1];
         vorheriger.classList.add("verblasst");
-
-        if (textBloecke[index].startsWith("TREPPE:\n")) {
-          vorheriger.style.marginBottom = "1.44em";
-        }
       }
 
       if (index < textBloecke.length) {
