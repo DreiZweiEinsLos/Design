@@ -2,8 +2,9 @@
 <html lang="de">
 <head>
   <meta charset="UTF-8" />
-  <title>Text mit getippter Treppe</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>EINS ZWEI DREI LOS</title>
   <style>
     body {
       background-color: #111;
@@ -31,7 +32,6 @@
       position: relative;
       margin-top: 1.44em;
       margin-bottom: 1.44em;
-      height: auto;
     }
 
     .treppen-zeile {
@@ -55,34 +55,52 @@
       cursor: pointer;
     }
 
-    @media (max-width: 700px) {
+    #text-container {
+      max-width: 100%;
+    }
+
+    @media (max-width: 600px) {
       body {
-        font-size: 19px;
-        padding: 24px;
+        font-size: 18px;  
+        padding: 10px 15px;
       }
 
-      .treppe-container {
-        position: static;
+      #text-container {
+        max-width: 100% !important;
+        width: 100% !important;
+        margin: 0 auto;
+      }
+
+      .block {
+        margin-bottom: 0.5em;
       }
 
       .treppen-zeile {
-        position: static;
-        white-space: normal;
-        margin-left: 0;
-        margin-bottom: 0.5em;
+        position: static !important;
+        left: auto !important;
+        bottom: auto !important;
+        white-space: normal !important; /* Wichtig für Umbrüche auf Mobil */
+        word-wrap: break-word !important;
+        overflow-wrap: break-word !important;
+      }
+
+      .treppe-container {
+        height: auto !important;
       }
     }
+
   </style>
 </head>
 <body>
   <div id="text-container"></div>
 
   <script>
+    const istMobil = window.innerWidth <= 600;
     const textBloecke = [
       `HALLO.\nICH BIN EVA.\nINDUSTRIE & SERVICE DESIGNERIN.\n15+ JAHRE <span class="verzoegert-link" data-url="https://www.linkedin.com/in/evaburkhardt/">ERFAHRUNG</span>.`,
-      `TREPPE:\nDU WILLST DEINE KUNDEN BEWUSST ANSPRECHEN?\nDEIN PRODUKT &/ DIE TOUCHPOINTS NEU DENKEN?\nDAS KUNDENERLEBNIS VERSTEHEN UND DESIGNEN?`,
-      `WAS BRAUCHST DU?\n   FREELANCE DESIGN ARBEIT\n   WORKSHOPS\n   COACHING`,
-      `<span class="verzoegert-link" data-url="mailto:evaburkhardt.mail@gmail.com">SCHREIB MIR.</span>`
+      `TREPPE:\nDU WILLST DEINE KUNDEN ANSPRECHEN?\nDEIN PRODUKT/SERVICE NEU DENKEN?\nDAS KUNDENERLEBNIS PRIORISIEREN?`,
+      `WAS BRAUCHST DU?\n.FREELANCE DESIGN ARBEIT\n.WORKSHOPS\n.COACHING`,
+      `SCHREIB MIR <span class="verzoegert-link" data-url="mailto:evaburkhardt.mail@gmail.com">TEST@GMAIL.COM.</span>`
     ];
 
     const schreibDelay = 35;
@@ -106,8 +124,16 @@
           const linkSpan = div.querySelector(".verzoegert-link");
           if (linkSpan) {
             linkSpan.classList.add("aktiv");
-            linkSpan.onclick = () => window.open(linkSpan.dataset.url, "_blank");
+            linkSpan.onclick = () => {
+              const url = linkSpan.dataset.url;
+              if (url.startsWith("mailto:")) {
+                window.location.href = url;
+              } else {
+                window.open(url, "_blank");
+              }
+            };
           }
+
           if (callback) callback();
           return;
         }
@@ -162,7 +188,14 @@
           i++;
           setTimeout(tippen, schreibDelay);
         } else {
-          callback && callback();
+          // Spezielle Pausen nach Zeile 0 und 1
+          if (index === 0) {
+            setTimeout(callback, pauseNachErsterZeile);
+          } else if (index === 1) {
+            setTimeout(callback, pauseNachErsterZeile);
+          } else {
+            setTimeout(callback, zeilenPause); // reguläre Pause nach anderen Zeilen
+          }
         }
       }
       tippen();
@@ -170,23 +203,54 @@
 
     function zeigeTreppe(textBlock, callback) {
       const zeilen = textBlock.split("\n");
-      const containerDiv = document.createElement("div");
-      containerDiv.classList.add("block", "treppe-container");
 
-      // Nur Höhe setzen, wenn nicht mobile
-      if (window.innerWidth > 700) {
-        containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
+      if (istMobil) {
+        // Erzeuge einen gemeinsamen Container für alle Zeilen
+        const containerDiv = document.createElement("div");
+        containerDiv.classList.add("block", "treppe-container");
+        container.appendChild(containerDiv);
+
+        let index = 0;
+        function schreibeNächsteZeile() {
+          if (index < zeilen.length) {
+            const zeileDiv = document.createElement("div");
+            zeileDiv.classList.add("treppen-zeile");
+            containerDiv.appendChild(zeileDiv);
+
+            let i = 0;
+            function tippen() {
+              if (i < zeilen[index].length) {
+                zeileDiv.textContent += zeilen[index][i];
+                i++;
+                setTimeout(tippen, schreibDelay);
+              } else {
+                index++;
+                setTimeout(schreibeNächsteZeile, zeilenPause);
+              }
+            }
+            tippen();
+          } else {
+            callback && callback();
+          }
+        }
+        schreibeNächsteZeile();
+
+        return;
       }
 
+      // Desktop-Variante (bleibt wie gehabt)
+      const containerDiv = document.createElement("div");
+      containerDiv.classList.add("block", "treppe-container");
+      containerDiv.style.height = `calc(${zeilen.length} * 1.44em)`;
       container.appendChild(containerDiv);
 
       let i = 0;
       function baueZeile() {
         if (i < zeilen.length) {
           tippeTreppeZeile(zeilen[i], containerDiv, i, () => {
-            setTimeout(baueZeile, zeilenPause);
+            i++;
+            baueZeile();
           });
-          i++;
         } else {
           callback && callback();
         }
@@ -195,18 +259,22 @@
     }
 
     function zeigeBlock(index) {
+      if (index >= textBloecke.length) {
+        return;
+      }
+      // Hier keine Prüfung ob textBloecke[index] definiert ist – führt zum Fehler
       if (index > 0) {
         const vorheriger = container.children[index - 1];
-        vorheriger.classList.add("verblasst");
-
-        if (textBloecke[index].startsWith("TREPPE:\n")) {
+        if (vorheriger && textBloecke[index].startsWith("TREPPE:\n")) {
+          vorheriger.classList.add("verblasst");
           vorheriger.style.marginBottom = "1.44em";
+        } else if (vorheriger) {
+          vorheriger.classList.add("verblasst");
         }
       }
 
       if (index < textBloecke.length) {
         const blockText = textBloecke[index];
-
         if (blockText.startsWith("TREPPE:\n")) {
           const treppenText = blockText.replace("TREPPE:\n", "");
           zeigeTreppe(treppenText, () => {
